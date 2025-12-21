@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LiveStream - Production Control</title>
+    <link rel="icon" href="DCN Logo.jpg" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['Inter', 'sans-serif'],
+            },
+            colors: {
+              church: {
+                900: 'rgb(var(--c-900) / <alpha-value>)', 
+                800: 'rgb(var(--c-800) / <alpha-value>)', 
+                700: 'rgb(var(--c-700) / <alpha-value>)', 
+                accent: '#A5098D', 
+                'accent-hover': '#850770',
+                main: 'rgb(var(--c-text-main) / <alpha-value>)',
+                muted: 'rgb(var(--c-text-muted) / <alpha-value>)',
+              },
+              status: {
+                ready: '#22c55e', 
+                notReady: '#ef4444', 
+                hold: '#f97316', 
+                switch: '#3b82f6', 
+                attention: '#f43f5e', 
+              }
+            },
+            animation: {
+              'pulse-fast': 'pulse 0.5s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+            }
+          }
+        }
+      }
+    </script>
+    <style>
+      :root {
+        --c-900: 24 24 27; 
+        --c-800: 39 39 42; 
+        --c-700: 63 63 70; 
+        --c-text-main: 255 255 255; 
+        --c-text-muted: 156 163 175; 
+      }
+      
+      .light-mode {
+        --c-900: 243 244 246; 
+        --c-800: 255 255 255; 
+        --c-700: 229 231 235; 
+        --c-text-main: 17 24 39; 
+        --c-text-muted: 107 114 128; 
+      }
+
+      body {
+        background-color: rgb(var(--c-900));
+        color: rgb(var(--c-text-main));
+        transition: background-color 0.3s ease, color 0.3s ease;
+      }
+      
+      ::-webkit-scrollbar {
+        width: 8px;
+      }
+      ::-webkit-scrollbar-track {
+        background: rgb(var(--c-800)); 
+      }
+      ::-webkit-scrollbar-thumb {
+        background: rgb(var(--c-700)); 
+        border-radius: 4px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: #A5098D; 
+      }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react/": "https://esm.sh/react@^19.2.1/",
+    "react": "https://esm.sh/react@^19.2.1",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.1/",
+    "@supabase/supabase-js": "https://esm.sh/@supabase/supabase-js@2.45.1"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
+</head>
+  <body>
+    <div id="root"></div>
+  <script type="module" src="/index.tsx"></script>
+</body>
+</html>

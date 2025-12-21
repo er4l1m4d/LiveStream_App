@@ -1,0 +1,5 @@
+{
+  "name": "LiveStream",
+  "description": "Real-time communication platform for church production teams, connecting mixers, cameramen, and admins.",
+  "requestFramePermissions": []
+}
