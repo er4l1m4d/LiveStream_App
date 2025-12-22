@@ -374,7 +374,7 @@ export const ProductionProvider: React.FC<{ children: ReactNode }> = ({ children
   const kickOperators = async (cameraId: string) => {
     if (!churchSlug) return;
     await supabase.from('cameras').update({
-      currentOperators: [],
+      current_operators: [],
       is_shift_active: false,
       shift_end_time: null,
       status: 'NOT_READY',
