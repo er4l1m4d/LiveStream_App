@@ -287,7 +287,7 @@ export const ProductionProvider: React.FC<{ children: ReactNode }> = ({ children
 
     const newOp: Operator = { id: userId || Date.now().toString(), name: operatorName };
     await supabase.from('cameras').update({
-      currentOperators: [...currentOperators, newOp]
+      current_operators: [...currentOperators, newOp]
     }).eq('id', cameraId);
     
     await writeLog(`${operatorName} joined ${cam.name}`);
