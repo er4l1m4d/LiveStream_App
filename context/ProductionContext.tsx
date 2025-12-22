@@ -7,6 +7,7 @@ interface ProductionContextType {
   state: AppState;
   churchSlug: string | null;
   churchName: string | null;
+  isLoading: boolean;
   joinChurch: (slug: string, password: string) => Promise<{ success: boolean; message?: string }>;
   createChurch: (name: string, password: string) => Promise<{ success: boolean; message?: string; churchId?: string }>;
   logoutChurch: () => void;
@@ -47,25 +48,32 @@ export const ProductionProvider: React.FC<{ children: ReactNode }> = ({ children
   const [churchName, setChurchName] = useState<string | null>(null);
   const [isCloudConnected, setIsCloudConnected] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   // 1. Initial Session Restore
   useEffect(() => {
     const initAuth = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        // Sign in anonymously if no user
-        await supabase.auth.signInAnonymously();
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) {
+          setUserId(session.user.id);
+        } else {
+          // Don't force anonymous auth - let the app work without authentication
+          console.log('No user session found - app will work without auth');
+        }
+      } catch (error) {
+        console.error('Auth initialization error:', error);
+      } finally {
+        setIsLoading(false);
       }
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user) setUserId(session.user.id);
+
+      const storedSlug = localStorage.getItem('dcn_active_church_slug');
+      if (storedSlug) {
+        setChurchSlug(storedSlug);
+      }
     };
 
     initAuth();
-
-    const storedSlug = localStorage.getItem('dcn_active_church_slug');
-    if (storedSlug) {
-      setChurchSlug(storedSlug);
-    }
   }, []);
 
   // 2. Real-time Synchronization Listeners
@@ -94,7 +102,18 @@ export const ProductionProvider: React.FC<{ children: ReactNode }> = ({ children
       // Fetch Cameras
       const { data: cameras } = await supabase.from('cameras').select('*').eq('church_id', churchSlug);
       if (cameras) {
-        setState(prev => ({ ...prev, cameras: cameras.sort((a, b) => a.name.localeCompare(b.name)) }));
+        const mappedCameras = cameras.map(cam => ({
+          ...cam,
+          accessCode: cam.access_code,
+          currentOperators: cam.current_operators || [],
+          defaultShiftDuration: cam.default_shift_duration,
+          isAttentionNeeded: cam.is_attention_needed,
+          isPaused: cam.is_paused,
+          isShiftActive: cam.is_shift_active,
+          pausedRemainingTime: cam.paused_remaining_time,
+          shiftEndTime: cam.shift_end_time
+        }));
+        setState(prev => ({ ...prev, cameras: mappedCameras.sort((a, b) => a.name.localeCompare(b.name)) }));
       }
 
       // Fetch Logs
@@ -157,29 +176,54 @@ export const ProductionProvider: React.FC<{ children: ReactNode }> = ({ children
   };
 
   const createChurch = async (name: string, password: string) => {
-    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-    let churchId = '';
-    for (let i = 0; i < 6; i++) {
-      churchId += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-
     try {
-      const { error: churchError } = await supabase.from('churches').insert({
+      // Generate shorter church ID: first letter + 5 random numbers
+      const firstLetter = name.charAt(0).toUpperCase();
+      const randomNumbers = Math.floor(10000 + Math.random() * 90000); // 5-digit number
+      let churchId = `${firstLetter}${randomNumbers}`;
+
+      // Check if ID already exists (very unlikely but just in case)
+      const { data: existingChurch } = await supabase.from('churches').select('id').eq('id', churchId).single();
+      if (existingChurch) {
+        // If by some chance it exists, generate another one
+        const newRandomNumbers = Math.floor(10000 + Math.random() * 90000);
+        churchId = `${firstLetter}${newRandomNumbers}`;
+      }
+
+      const { data: churchData, error: churchError } = await supabase.from('churches').insert({
         id: churchId,
         name,
         shared_password: password,
         admin_password: 'admin',
         mixer_password: 'mixer',
         logo_url: ''
-      });
+      }).select().single();
 
       if (churchError) throw churchError;
 
       // Initial Cameras
-      const camsToInsert = INITIAL_CAMERAS.map(({ id, ...rest }) => ({
+      const camsToInsert = INITIAL_CAMERAS.map(({ 
+        id, 
+        accessCode, 
+        currentOperators, 
+        defaultShiftDuration, 
+        isAttentionNeeded,
+        isPaused,
+        isShiftActive,
+        pausedRemainingTime,
+        shiftEndTime,
+        ...rest 
+      }) => ({
         ...rest,
         church_id: churchId,
-        operators: [] // Map currentOperators to operators column
+        access_code: accessCode,
+        current_operators: currentOperators,
+        default_shift_duration: defaultShiftDuration,
+        is_attention_needed: isAttentionNeeded,
+        is_paused: isPaused,
+        is_shift_active: isShiftActive,
+        paused_remaining_time: pausedRemainingTime,
+        shift_end_time: shiftEndTime
       }));
       
       const { error: camError } = await supabase.from('cameras').insert(camsToInsert);
@@ -408,6 +452,7 @@ export const ProductionProvider: React.FC<{ children: ReactNode }> = ({ children
       state,
       churchSlug,
       churchName,
+      isLoading,
       joinChurch,
       createChurch,
       logoutChurch,

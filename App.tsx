@@ -11,8 +11,23 @@ import { UserRole } from './types';
 
 // Separation of concerns: Inner component accesses Context
 const AppContent = () => {
-  const { churchSlug, logoutChurch } = useProduction();
+  const { churchSlug, logoutChurch, isLoading } = useProduction();
   const [currentRole, setCurrentRole] = useState<UserRole>('NONE');
+
+  // Show loading screen while initializing
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-church-900 flex items-center justify-center p-6">
+        <div className="text-center">
+          <div className="w-16 h-16 mb-6 rounded-full bg-church-accent animate-pulse flex items-center justify-center">
+            <div className="w-8 h-8 bg-white rounded-full animate-ping"></div>
+          </div>
+          <h1 className="text-2xl font-bold text-church-main mb-2">Loading LiveStream...</h1>
+          <p className="text-church-muted">Initializing production system</p>
+        </div>
+      </div>
+    );
+  }
 
   // If not connected to a specific church, show Landing Page
   if (!churchSlug) {
