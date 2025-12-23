@@ -240,6 +240,51 @@ export const AdminDashboard: React.FC = () => {
                 </tbody>
               </table>
             </div>
+
+            {/* Mobile View - Camera Cards */}
+            <div className="md:hidden space-y-4">
+              {state.cameras.map(cam => (
+                <div key={cam.id} className="bg-church-900 rounded-lg p-4 border border-church-700">
+                  <div className="flex justify-between items-start mb-3">
+                    <div>
+                      <h3 className="font-bold text-church-main text-lg">{cam.name}</h3>
+                      <span className="text-xs bg-church-800 text-church-muted px-2 py-1 rounded border border-church-600">{cam.type} Station</span>
+                    </div>
+                    <div className="text-right">
+                      {renderCameraActions(cam)}
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-3">
+                    <div>
+                      <div className="text-xs text-church-muted mb-1">Status</div>
+                      {renderCameraStatus(cam)}
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="text-xs text-church-muted block mb-1">Default Timer</label>
+                        <input 
+                          type="number" 
+                          className="w-full bg-church-800 border border-church-600 rounded p-2 text-center text-sm text-church-main" 
+                          value={cam.defaultShiftDuration} 
+                          onChange={(e) => updateCameraConfig(cam.id, { defaultShiftDuration: Number(e.target.value) })} 
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs text-church-muted block mb-1">Access Code</label>
+                        <input 
+                          type="text" 
+                          className="w-full bg-church-800 border border-church-600 rounded p-2 text-center text-sm font-mono text-church-main" 
+                          value={cam.accessCode} 
+                          onChange={(e) => updateCameraConfig(cam.id, { accessCode: e.target.value })} 
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
 
           <div className="bg-church-800 rounded-xl p-6 border border-church-700">
